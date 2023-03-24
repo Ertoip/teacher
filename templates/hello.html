@@ -6,28 +6,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flask</title>
     <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <h1>Chat</h1>
-    <div class="chat">
-        {%for i in range(0, len)%}
-            {%if responses[i].role != "system"%}
-                <div class="{{responses[i].role}}">
-                    <p>{{responses[i].content}}</p>
-                </div>
-            {%endif%}
-        {%endfor%}
+    <div class="chat" id="chat">
+        <div class="assistant">
+            <p>{{completion}}</p>
+        </div>
     </div>
     <div class="wrapper">
-        <form action="/" class="formChat" method="POST">
-            <input class="chatbox" type="text" name="chat" required>
-            <button class="send" type="submit">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-send" viewBox="0 -2 16 18">
-                    <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"/>
-                </svg>
-            </button>
-        </form>
+        <div class="formChat">
+            <form action="" class="formChat" id="formChat">
+                <input class="chatbox" type="text" name="chat" id="inputChat" required>
+                <button class="send" id="send">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-send" viewBox="0 -2 16 18">
+                        <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
     </div>
-    
 </body>
+    <script>
+        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+        // Handle incoming messages
+        socket.on('response', function(response) {
+            var message = '<div class="assistant"><p>' + response.message + '</p></div>';
+            document.getElementById('chat').innerHTML += message;
+        });
+
+        // Handle sending messages
+        document.getElementById('formChat').onsubmit = function(event) {
+            event.preventDefault(); // Prevent form submission
+            var input = document.getElementById('inputChat');
+            var message = input.value;
+            input.value = '';
+            var myMessage = '<div class="user"><p>' + message + '</p></div>';
+            document.getElementById('chat').innerHTML += myMessage;
+            socket.emit('message', message);
+        };
+    </script>
 </html>
